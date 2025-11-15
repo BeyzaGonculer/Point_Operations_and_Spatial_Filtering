@@ -315,3 +315,78 @@ sp_box3 = apply_and_show_filter(
     "3x3 Box filter on Salt & Pepper noise",
     "sp_noisy_box3.png"
 )
+
+# Part 3: Advanced Filtering and Edge Detection
+
+# 3.1. Separable Filtering (Efficiency)
+
+def conv1d_along_axis(img_u8: np.ndarray, kernel1d: np.ndarray, axis: int = 1) -> np.ndarray:
+
+    assert img_u8.dtype == np.uint8
+    img = img_u8.astype(np.float64)
+    H, W = img.shape
+
+    k = kernel1d.size
+    pad = k // 2
+
+    if axis == 1:  # horizontal
+        padded = np.pad(img, ((0, 0), (pad, pad)), mode="reflect")
+        out = np.zeros_like(img, dtype=np.float64)
+        for i in range(H):
+            for j in range(W):
+                region = padded[i, j:j + k]        # 1xk
+                out[i, j] = np.sum(region * kernel1d)
+    elif axis == 0:  # vertical
+        padded = np.pad(img, ((pad, pad), (0, 0)), mode="reflect")
+        out = np.zeros_like(img, dtype=np.float64)
+        for i in range(H):
+            for j in range(W):
+                region = padded[i:i + k, j]        # kx1
+                out[i, j] = np.sum(region * kernel1d)
+    else:
+        raise ValueError("axis 0 (vertical) or 1 (horizontal)")
+    return out
+
+
+def make_gaussian_kernel_1d(size: int = 5, sigma: float = 1.0) -> np.ndarray:
+
+    assert size % 2 == 1, "size tek olmalı."
+    k = size // 2
+    xs = np.arange(-k, k + 1)
+    g = np.exp(- (xs**2) / (2 * sigma**2))
+    g /= g.sum()   # normalize, toplam 1
+    return g.astype(np.float64)
+
+g1d = make_gaussian_kernel_1d(size=5, sigma=1.0)
+print("1D Gaussian kernel:", g1d, "sum =", g1d.sum())
+
+
+# equalized L*
+clean = eq.copy()   # eq: hist_equalize_from_scratch from L* equalized
+
+# 1) horizontal
+tmp_h = conv1d_along_axis(clean, g1d, axis=1)
+
+# 2) vertical
+tmp_v = conv1d_along_axis(to_uint8(tmp_h), g1d, axis=0)
+
+gauss_sep = to_uint8(tmp_v)
+
+imshow_gray(gauss_sep, "Separable 1D Gaussian (5x5, sigma=1)")
+save_gray(gauss_sep, "outputs/clean_gauss_separable.png")
+
+
+# 2D Gaussian kernel (5x5, sigma=1)
+gauss5_2d = make_gaussian_kernel(size=5, sigma=1.0)
+
+clean_gauss2d_f = cross_correlation_2d(clean, gauss5_2d)
+clean_gauss2d = to_uint8(clean_gauss2d_f)
+
+imshow_gray(clean_gauss2d, "2D Gaussian (5x5) on clean image")
+save_gray(clean_gauss2d, "outputs/clean_gauss_2d.png")
+
+
+# 3.2. Edge Detection (Sobel Operator)
+
+
+
