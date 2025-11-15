@@ -158,3 +158,35 @@ def add_gaussian_noise(img_u8: np.ndarray, sigma: float = 20.0, mu: float = 0.0)
 gauss_noisy = add_gaussian_noise(clean, sigma=20.0)
 imshow_gray(gauss_noisy, "Gaussian noisy image (sigma=20)")
 save_gray(gauss_noisy, "outputs/L_gaussian_noise.png")
+
+# 2.1.2 (Salt and Pepper)
+
+def add_salt_pepper_noise(img_u8: np.ndarray, amount: float = 0.05) -> np.ndarray:
+
+    assert img_u8.dtype == np.uint8
+    out = img_u8.copy()
+
+    # total pixel
+    num_pixels = out.size
+    num_noisy = int(num_pixels * amount)
+
+    # 1D index
+    flat = out.flatten()
+
+    # choose indexes for noise
+    idx = np.random.choice(num_pixels, size=num_noisy, replace=False)
+
+    # half of them are 0, half of them are 255
+    half = num_noisy // 2
+    flat[idx[:half]] = 0
+    flat[idx[half:]] = 255
+
+    # reshape to reach previos image
+    out = flat.reshape(out.shape)
+    return out
+
+sp_noisy = add_salt_pepper_noise(clean, amount=0.05)  # %5 pixel
+imshow_gray(sp_noisy, "Salt & Pepper noisy image (5%)")
+save_gray(sp_noisy, "outputs/L_saltpepper_noise.png")
+
+
