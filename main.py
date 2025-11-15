@@ -189,7 +189,7 @@ sp_noisy = add_salt_pepper_noise(clean, amount=0.05)  # %5 pixel
 imshow_gray(sp_noisy, "Salt & Pepper noisy image (5%)")
 save_gray(sp_noisy, "outputs/L_saltpepper_noise.png")
 
-# 2.2
+# 2.2. Linear Filtering (From Scratch)
 
 def cross_correlation_2d(img_u8: np.ndarray, kernel: np.ndarray) -> np.ndarray:
 
@@ -235,7 +235,7 @@ print("box7 kernel shape:", box7.shape)
 
 def make_gaussian_kernel(size: int = 5, sigma: float = 1.0) -> np.ndarray:
 
-    assert size % 2 == 1, "Kernel size should be one."
+    assert size % 2 == 1, "Kernel size should be odd."
 
     k = size // 2
     xs = np.arange(-k, k + 1)
@@ -277,4 +277,41 @@ filtered_gauss5 = apply_and_show_filter(
     gauss_noisy, gauss5,
     "5x5 Gaussian filter on Gaussian noise",
     "gauss_noisy_gauss5.png"
+)
+
+# 2.3. Non-Linear Filtering (From Scratch)
+
+def median_filter_2d(img_u8: np.ndarray, ksize: int = 3) -> np.ndarray:
+
+    assert img_u8.dtype == np.uint8
+    assert ksize % 2 == 1, "Kernel size should be odd.(3,5,7) "
+
+    img = img_u8.astype(np.float64)
+    H, W = img.shape
+    pad = ksize // 2
+
+    # edge-preserving
+    padded = np.pad(img, ((pad, pad), (pad, pad)), mode="reflect")
+
+    out = np.zeros_like(img, dtype=np.float64)
+
+    for i in range(H):
+        for j in range(W):
+            region = padded[i:i + ksize, j:j + ksize]   # ksize x ksize window
+            out[i, j] = np.median(region)
+
+    return to_uint8(out)
+
+
+# 3x3 median filter on Salt & Pepper noisy image
+sp_median3 = median_filter_2d(sp_noisy, ksize=3)
+imshow_gray(sp_median3, "3x3 Median filter on Salt & Pepper noise")
+save_gray(sp_median3, "outputs/sp_noisy_median3.png")
+
+
+sp_box3 = apply_and_show_filter(
+    sp_noisy,
+    box3,
+    "3x3 Box filter on Salt & Pepper noise",
+    "sp_noisy_box3.png"
 )
