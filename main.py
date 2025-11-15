@@ -131,3 +131,7 @@ save_gray(eq, "outputs/L_equalized.png")
 # Original vs Equilized histogram draw
 plot_hist(hist_orig, "Original L* histogram")
 plot_hist(hist_eq, "Equalized L* histogram")
+
+clean = eq.copy()   # histogram-equalized L* görüntüsü
+imshow_gray(clean, "Clean equalized L* image")
+save_gray(clean, "outputs/L_equalized_clean.png")
