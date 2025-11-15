@@ -124,10 +124,10 @@ def hist_equalize_from_scratch(gray_u8: np.ndarray):
 eq, hist_orig, hist_eq, pdf, cdf = hist_equalize_from_scratch(gray)
 
 
-# Eşitlenmiş görüntüyü göster ve kaydet
+# Equilized image draw and save
 imshow_gray(eq, "Equalized L* image")
 save_gray(eq, "outputs/L_equalized.png")
 
-# Orijinal vs eşitlenmiş histogramları çiz
+# Original vs Equilized histogram draw
 plot_hist(hist_orig, "Original L* histogram")
 plot_hist(hist_eq, "Equalized L* histogram")
