@@ -189,4 +189,92 @@ sp_noisy = add_salt_pepper_noise(clean, amount=0.05)  # %5 pixel
 imshow_gray(sp_noisy, "Salt & Pepper noisy image (5%)")
 save_gray(sp_noisy, "outputs/L_saltpepper_noise.png")
 
+# 2.2
 
+def cross_correlation_2d(img_u8: np.ndarray, kernel: np.ndarray) -> np.ndarray:
+
+    # convert to float
+    img = img_u8.astype(np.float64)
+    kH, kW = kernel.shape
+    H, W = img.shape
+
+    pad_h = kH // 2
+    pad_w = kW // 2
+
+    # Padding with 0
+    padded = np.pad(img, ((pad_h, pad_h), (pad_w, pad_w)), mode="constant", constant_values=0)
+
+    out = np.zeros_like(img, dtype=np.float64)
+
+    # 2D shift
+    for i in range(H):
+        for j in range(W):
+            region = padded[i:i + kH, j:j + kW]  # kH x kW window
+            out[i, j] = np.sum(region * kernel)
+
+    return out
+
+
+def to_uint8(img_f: np.ndarray) -> np.ndarray:
+
+    return np.clip(np.rint(img_f), 0, 255).astype(np.uint8)
+
+
+def make_box_kernel(size: int) -> np.ndarray:
+
+    k = np.ones((size, size), dtype=np.float64)
+    k /= k.size  # yani size*size
+    return k
+
+box3 = make_box_kernel(3)   # 3x3
+box7 = make_box_kernel(7)   # 7x7
+
+print("box3 kernel:\n", box3)
+print("box7 kernel shape:", box7.shape)
+
+
+def make_gaussian_kernel(size: int = 5, sigma: float = 1.0) -> np.ndarray:
+
+    assert size % 2 == 1, "Kernel size should be one."
+
+    k = size // 2
+    xs = np.arange(-k, k + 1)
+    ys = np.arange(-k, k + 1)
+    X, Y = np.meshgrid(xs, ys)
+
+    # 2D Gaussian
+    g = np.exp(-(X**2 + Y**2) / (2 * sigma**2))
+
+    # normalize
+    g /= g.sum()
+    return g
+
+gauss5 = make_gaussian_kernel(size=5, sigma=1.0)
+print("gaussian 5x5 kernel sum:", gauss5.sum())
+
+def apply_and_show_filter(img_u8: np.ndarray, kernel: np.ndarray, title: str, save_name: str):
+    filtered_f = cross_correlation_2d(img_u8, kernel)
+    filtered_u8 = to_uint8(filtered_f)
+
+    imshow_gray(filtered_u8, title)
+    save_gray(filtered_u8, f"outputs/{save_name}")
+    return filtered_u8
+
+
+filtered_box3 = apply_and_show_filter(
+    gauss_noisy, box3,
+    "3x3 Box filter on Gaussian noise",
+    "gauss_noisy_box3.png"
+)
+
+filtered_box7 = apply_and_show_filter(
+    gauss_noisy, box7,
+    "7x7 Box filter on Gaussian noise",
+    "gauss_noisy_box7.png"
+)
+
+filtered_gauss5 = apply_and_show_filter(
+    gauss_noisy, gauss5,
+    "5x5 Gaussian filter on Gaussian noise",
+    "gauss_noisy_gauss5.png"
+)
