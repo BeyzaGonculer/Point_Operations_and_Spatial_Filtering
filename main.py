@@ -135,3 +135,26 @@ plot_hist(hist_eq, "Equalized L* histogram")
 clean = eq.copy()   # histogram-equalized L* görüntüsü
 imshow_gray(clean, "Clean equalized L* image")
 save_gray(clean, "outputs/L_equalized_clean.png")
+
+# 2.1.1 (Add Gaussian Noise)
+
+def add_gaussian_noise(img_u8: np.ndarray, sigma: float = 20.0, mu: float = 0.0) -> np.ndarray:
+
+    assert img_u8.dtype == np.uint8
+
+    # convert to float and add noise
+    img_f = img_u8.astype(np.float64)
+
+    # create Gaussian noise
+    noise = np.random.normal(loc=mu, scale=sigma, size=img_f.shape)
+
+    # add noise
+    noisy_f = img_f + noise
+
+    # 0–255 crop
+    noisy_u8 = np.clip(np.rint(noisy_f), 0, 255).astype(np.uint8)
+    return noisy_u8
+
+gauss_noisy = add_gaussian_noise(clean, sigma=20.0)
+imshow_gray(gauss_noisy, "Gaussian noisy image (sigma=20)")
+save_gray(gauss_noisy, "outputs/L_gaussian_noise.png")
