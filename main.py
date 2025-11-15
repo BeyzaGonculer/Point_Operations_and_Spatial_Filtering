@@ -388,5 +388,58 @@ save_gray(clean_gauss2d, "outputs/clean_gauss_2d.png")
 
 # 3.2. Edge Detection (Sobel Operator)
 
+# 3x3 Sobel kernel
+Sx = np.array([
+    [-1, 0,  1],
+    [-2, 0,  2],
+    [-1, 0,  1]
+], dtype=np.float64)
+
+Sy = np.array([
+    [-1, -2, -1],
+    [ 0,  0,  0],
+    [ 1,  2,  1]
+], dtype=np.float64)
+
+
+def scale_to_uint8(img_f: np.ndarray) -> np.ndarray:
+
+    img_abs = np.abs(img_f)
+    max_val = img_abs.max()
+    if max_val == 0:
+        return np.zeros_like(img_abs, dtype=np.uint8)
+    scaled = img_abs / max_val * 255.0
+    return scaled.astype(np.uint8)
+
+
+def sobel_edge_detection(clean_u8: np.ndarray):
+    # 1) Gx ve Gy (float)
+    Gx_f = cross_correlation_2d(clean_u8, Sx)
+    Gy_f = cross_correlation_2d(clean_u8, Sy)
+
+    # 2)  |Gx| ve |Gy| 0–255
+    Gx_vis = scale_to_uint8(Gx_f)
+    Gy_vis = scale_to_uint8(Gy_f)
+
+    # 3) G = sqrt(Gx^2 + Gy^2)
+    G_mag_f = np.sqrt(Gx_f**2 + Gy_f**2)
+    G_mag = scale_to_uint8(G_mag_f)
+
+
+    imshow_gray(Gx_vis, "Sobel Gx (vertical edges)")
+    save_gray(Gx_vis, "outputs/sobel_Gx.png")
+
+    imshow_gray(Gy_vis, "Sobel Gy (horizontal edges)")
+    save_gray(Gy_vis, "outputs/sobel_Gy.png")
+
+    imshow_gray(G_mag, "Sobel gradient magnitude |G|")
+    save_gray(G_mag, "outputs/sobel_Gmag.png")
+
+    return Gx_vis, Gy_vis, G_mag
+
+
+Gx_vis, Gy_vis, G_mag = sobel_edge_detection(clean)
+
+
 
 
